@@ -1,5 +1,6 @@
 import React from 'react'
 import {TextField, Button} from '@material-ui/core'
+import axios from 'axios';
 
 const DEFAULT_DATE = "2000-01-01";
 
@@ -12,12 +13,22 @@ function formatDate(year, month, day) {
   return [year, month, day].join('-');
 }
 
+function getBase64(file, cb) {
+  let reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = function () {
+      cb(reader.result)
+  };
+  reader.onerror = function (error) {
+      console.log('Error: ', error);
+  };
+}
+
 export default function User() {
   const [name, setName] = React.useState("");
   const [surname, setSurname] = React.useState("");
   const [birthDate, setBirthDate] = React.useState(DEFAULT_DATE);
   const [selectedFile, setSelectedFile] = React.useState(null);
-
 
   const saveUser = (user) => {
     return fetch("http://localhost:8080/api/users", {
@@ -28,7 +39,7 @@ export default function User() {
   }
 
   const handleSubmit = () => {
-    const toInput = { name, surname, dateOfBirth: birthDate.toISOString().substring(0, 10) };
+    const toInput = { name, surname, dateOfBirth: birthDate };
     saveUser(toInput).then(data => {
       setName("");
       setSurname("");
@@ -37,28 +48,30 @@ export default function User() {
   }
 
   const handleScan = () => {
-    fetch('https://api.microblink.com/v1/recognizers/blinkid', {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer ZjRmM2MxZWY1NDljNGRmNWI4OTBmNzY0Njc3YWM3ODk6OWVmOTdlZmMtNzA0MS00ZTAyLTliMjgtOGFlZWIwNmQwMTgz",
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({
-        "imageSource": "https://narod.hr/wp-content/uploads/2015/02/OSOBNA.jpg",
-        "returnFullDocumentImage": false,
-        "returnFaceImage": false,
-        "imageAnalysisResult": true
-      })
-    })
-    .then(response =>  response.json())
-    .then(data => {
-        let userData = data.result
+    getBase64(selectedFile, (result) => {
+      callBlinkId(result).then(response => {
+        let userData = response.data.result
         setName(userData.firstName);
         setSurname(userData.lastName);
         let date = userData.dateOfBirth;
         setBirthDate(formatDate(date.year, date.month, date.day))
+      })
     })
+  }
+
+  const callBlinkId = (image) => {
+    const body = {
+      "imageSource": image,
+      "returnFullDocumentImage": false,
+      "returnFaceImage": false,
+      "imageAnalysisResult": true
+    }
+    const headers = {
+      "Authorization": "Bearer ZjRmM2MxZWY1NDljNGRmNWI4OTBmNzY0Njc3YWM3ODk6OWVmOTdlZmMtNzA0MS00ZTAyLTliMjgtOGFlZWIwNmQwMTgz",
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    };
+    return axios.post('https://api.microblink.com/v1/recognizers/blinkid', body, { headers })
   }
 
   return (
@@ -95,14 +108,20 @@ export default function User() {
         onChange={(date) => setBirthDate(date)}
       />
 
-      <Button
-        fullWidth
-        variant="contained"
-        preventDefault
-        onClick={handleScan}
-      >
-        Scan
-      </Button>
+      <div>
+        <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} />
+      </div>
+
+      {selectedFile &&
+        <Button
+          fullWidth
+          variant="contained"
+          preventDefault
+          onClick={handleScan}
+        >
+          Scan
+        </Button>
+      }
       
       <Button
         fullWidth
