@@ -2,7 +2,7 @@ package hr.katarina.library.book.borrow;
 
 import hr.katarina.library.book.Book;
 import hr.katarina.library.book.BookRepository;
-import hr.katarina.library.book.exceptions.BookAllreadyBorrowed;
+import hr.katarina.library.book.exceptions.BookAlreadyBorrowed;
 import hr.katarina.library.book.exceptions.BookNotBorrowedException;
 import hr.katarina.library.book.exceptions.BookNotFoundException;
 import hr.katarina.library.users.exceptions.UserNotFoundException;
@@ -31,7 +31,7 @@ public class BookBorrowService {
     public BookBorrow create(Long bookId, Long userId) {
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new BookNotFoundException("Book not found."));
         if (bookBorrowRepository.findActiveBorrow(book).isPresent())
-            throw new BookAllreadyBorrowed("Book is already borrowed.");
+            throw new BookAlreadyBorrowed("Book is already borrowed.");
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found."));
         Date borrowDate = new Date();

@@ -1,6 +1,6 @@
 package hr.katarina.library.config;
 
-import hr.katarina.library.book.exceptions.BookAllreadyBorrowed;
+import hr.katarina.library.book.exceptions.BookAlreadyBorrowed;
 import hr.katarina.library.book.exceptions.BookNotBorrowedException;
 import hr.katarina.library.book.exceptions.BookNotFoundException;
 import hr.katarina.library.users.exceptions.UserNotFoundException;
@@ -43,7 +43,7 @@ public class ControlerExceptionHandlers {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler({BookNotFoundException.class, UserNotFoundException.class, BookAllreadyBorrowed.class, BookNotBorrowedException.class})
+    @ExceptionHandler({BookNotFoundException.class, UserNotFoundException.class, BookAlreadyBorrowed.class, BookNotBorrowedException.class})
     @ResponseBody
     public String handleBusinessExceptions(RuntimeException ex) {
         return ex.getMessage();
